@@ -1,51 +1,58 @@
+"use client";
+
 import React, { useState } from "react";
 
 interface InputBoxProps {
-  onSendMessage: (message: string, type: string) => void;
+  onSendMessage: (text: string, file: File | null) => void;
 }
 
 const InputBox: React.FC<InputBoxProps> = ({ onSendMessage }) => {
   const [text, setText] = useState("");
-
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => setText(e.target.value);
+  const [fileName, setFileName] = useState<string | null>(null);
 
   const handleSend = () => {
-    if (text.trim()) {
-      onSendMessage(text, "text");
-      setText("");
-    }
-  };
+    const file = document.getElementById("file-input") as HTMLInputElement;
+    const uploadedFile = file?.files?.[0] || null;
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const fileUrl = URL.createObjectURL(file);
-      onSendMessage(fileUrl, type);
+    if (text.trim() || uploadedFile) {
+      onSendMessage(text, uploadedFile);
+      setText("");
+      setFileName(null);
+      if (file) file.value = ""; // Clear the file input
     }
   };
 
   return (
-    <div className="flex items-center p-2 bg-white rounded-lg shadow-md">
+    <div className="flex items-center space-x-4">
       <input
         type="text"
         value={text}
-        onChange={handleTextChange}
+        onChange={(e) => setText(e.target.value)}
         placeholder="Type your message..."
-        className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none"
+        className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none shadow text-black" // Ensure text color is black
       />
-      <button onClick={handleSend} className="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg">
+      <label className="cursor-pointer">
+        <input
+          type="file"
+          accept="image/*"
+          id="file-input"
+          className="hidden"
+          onChange={(e) => setFileName(e.target.files?.[0]?.name || null)}
+        />
+        <span className="px-4 py-2 bg-gray-200 text-black rounded-lg shadow">
+          {fileName || "Upload Image"}
+        </span>
+      </label>
+      <button
+        onClick={handleSend}
+        className="px-6 py-2 bg-blue-600 text-white rounded-lg shadow"
+      >
         Send
       </button>
-      <label className="ml-2 cursor-pointer">
-        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, "image")} />
-        📷
-      </label>
-      <label className="ml-2 cursor-pointer">
-        <input type="file" className="hidden" onChange={(e) => handleFileUpload(e, "file")} />
-        📄
-      </label>
     </div>
   );
 };
 
 export default InputBox;
+
+
